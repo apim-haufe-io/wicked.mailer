@@ -49,6 +49,7 @@ app.post('/', function (req, res, next) {
         req.app.processingWebhooks = false;
         if (err) {
             console.error(err);
+            console.error(err.stack);
             app.lastErr = err;
             return res.status(500).json(err);
         }
@@ -82,17 +83,14 @@ app.get('/ping', function (req, res, next) {
 
 function processWebhooks(app, webhooks, callback) {
     debug('processWebhooks()');
-    var baseUrl = app.get('api_url');
 
     async.eachSeries(webhooks, function(event, done) {
         debug('- process event ' + event);
         // Brainfucking callback and closure orgy
         var acknowledgeEvent = function(ackErr) {
             debug('- acknowledgeEvent()');
-            if (ackErr) {
-                debug(ackErr);
+            if (ackErr) 
                 return done(ackErr);
-            }
             utils.apiDelete(app, 'webhooks/events/mailer/' + event.id, done);
         };
         if (app.mailerGlobals.mailer.useMailer &&

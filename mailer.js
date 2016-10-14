@@ -88,6 +88,12 @@ mailer.handleEvent = function (app, event, done) {
     debug(event);
     var userId = event.data.userId;
     utils.apiGet(app, 'users/' + userId, function (err, userInfo) {
+        if (err && err.status == 404) {
+            // User has probably been deleted in the meantime.
+            console.error('handleEvent() - Unknown user ID: ' + userId);
+            // We'll treat this as a success, not much we can do here.
+            return done(null);
+        }
         if (err)
             return done(err);
         var verificationLink =
@@ -119,8 +125,7 @@ mailer.handleEvent = function (app, event, done) {
 
         utils.apiGet(app, 'templates/email/' + templateName, function (err, templateText) {
             if (err) {
-                debug('Getting the email template failed:');
-                debug(err);
+                console.error('Getting the email template failed!');
                 return done(err);
             }
             // Do da Mustache {{ }}
