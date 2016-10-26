@@ -6,7 +6,7 @@ var logger = require('morgan');
 var bodyParser = require('body-parser');
 var async = require('async');
 var debug = require('debug')('portal-mailer:app');
-var correlationIdHandler = require('portal-env').CorrelationIdHandler();
+var correlationIdHandler = require('wicked-sdk').correlationIdHandler();
 
 var mailer = require('./mailer');
 var utils = require('./utils');
@@ -25,10 +25,8 @@ app.use(correlationIdHandler);
 logger.token('correlation-id', function (req, res) {
     return req.correlationId;
 });
-if (app.get('env') == 'development')
-    app.use(logger('dev'));
-else
-    app.use(logger('{"date":":date[clf]","method":":method","url":":url","remote-addr":":remote-addr","version":":http-version","status":":status","content-length":":res[content-length]","referrer":":referrer","response-time":":response-time","correlation-id":":correlation-id"}'));
+app.use(logger('{"date":":date[clf]","method":":method","url":":url","remote-addr":":remote-addr","version":":http-version","status":":status","content-length":":res[content-length]","referrer":":referrer","response-time":":response-time","correlation-id":":correlation-id"}'));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 

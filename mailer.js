@@ -14,7 +14,6 @@ mailer.smtpTransporter = null;
 
 mailer.init = function (app, done) {
     debug('init()');
-    var apiUrl = app.get('api_url');
     var myUrl = app.get('my_url');
 
     async.parallel({
