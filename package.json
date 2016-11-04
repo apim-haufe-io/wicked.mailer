@@ -9,7 +9,7 @@
     "debug": "2.2.0", 
     "async": "2.0.1", 
     "mustache": "2.2.1",
-    "wicked-sdk": "^0.10.7"
+    "wicked-sdk": "^0.10.11"
   }, 
   "scripts": {
     "start": "node ./bin/mailer"
