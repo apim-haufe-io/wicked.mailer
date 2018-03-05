@@ -6,24 +6,24 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var mailer = require('../mailer');
-var debug = require('debug')('portal-mailer:main');
-var http = require('http');
-var nodeMailer = require('nodemailer');
-var async = require('async');
-var wicked = require('wicked-sdk');
-var utils = require('../utils');
+const app = require('../app');
+const mailer = require('../mailer');
+const debug = require('debug')('portal-mailer:main');
+const http = require('http');
+const nodeMailer = require('nodemailer');
+const async = require('async');
+const wicked = require('wicked-sdk');
+const utils = require('../utils');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3003');
+const port = normalizePort(process.env.PORT || '3003');
 app.set('port', port);
 
 // Create HTTP server.
-var server = http.createServer(app);
+const server = http.createServer(app);
 
 // Listen on provided port, on all network interfaces.
 server.listen(port);
@@ -53,13 +53,13 @@ async.series([
             throw err;
         }
 
-        var mailerOptions = app.mailerGlobals.mailer;
+        const mailerOptions = app.mailerGlobals.mailer;
         debug('mailerOptions:');
         debug(mailerOptions);
 
-        var smtpHost = mailerOptions.smtpHost;
+        const smtpHost = mailerOptions.smtpHost;
 
-        var transportOptions = {
+        const transportOptions = {
             host: mailerOptions.smtpHost
         };
 
@@ -108,7 +108,7 @@ async.series([
  */
 
 function normalizePort(val) {
-    var port = parseInt(val, 10);
+    const port = parseInt(val, 10);
 
     if (isNaN(port)) {
         // named pipe
@@ -132,7 +132,7 @@ function onError(error) {
         throw error;
     }
 
-    var bind = typeof port === 'string' ?
+    const bind = typeof port === 'string' ?
         'Pipe ' + port :
         'Port ' + port;
 
@@ -156,8 +156,8 @@ function onError(error) {
  */
 
 function onListening() {
-    var addr = server.address();
-    var bind = typeof addr === 'string' ?
+    const addr = server.address();
+    const bind = typeof addr === 'string' ?
         'pipe ' + addr :
         'port ' + addr.port;
     debug('Listening on ' + bind);

@@ -1,17 +1,17 @@
 'use strict';
 
-var express = require('express');
-var path = require('path');
-var logger = require('morgan');
-var bodyParser = require('body-parser');
-var async = require('async');
-var debug = require('debug')('portal-mailer:app');
-var correlationIdHandler = require('wicked-sdk').correlationIdHandler();
+const express = require('express');
+const path = require('path');
+const logger = require('morgan');
+const bodyParser = require('body-parser');
+const async = require('async');
+const debug = require('debug')('portal-mailer:app');
+const correlationIdHandler = require('wicked-sdk').correlationIdHandler();
 
-var mailer = require('./mailer');
-var utils = require('./utils');
+const mailer = require('./mailer');
+const utils = require('./utils');
 
-var app = express();
+const app = express();
 app.initialized = false;
 app.lastErr = false;
 
@@ -59,7 +59,7 @@ app.post('/', function (req, res, next) {
 app._startupSeconds = utils.getUtc();
 app.get('/ping', function (req, res, next) {
     debug('/ping');
-    var health = {
+    const health = {
         name: 'mailer',
         message: 'Up and running',
         uptime: (utils.getUtc() - app._startupSeconds),
@@ -69,7 +69,7 @@ app.get('/ping', function (req, res, next) {
         gitLastCommit: utils.getGitLastCommit(),
         gitBranch: utils.getGitBranch(),
         buildDate: utils.getBuildDate()
-    }; 
+    };
     if (!app.initialized) {
         health.healthy = 2;
         health.message = 'Initializing - Waiting for API';
@@ -86,12 +86,12 @@ app.get('/ping', function (req, res, next) {
 function processWebhooks(app, webhooks, callback) {
     debug('processWebhooks()');
 
-    async.eachSeries(webhooks, function(event, done) {
+    async.eachSeries(webhooks, function (event, done) {
         debug('- process event ' + event);
         // Brainfucking callback and closure orgy
-        var acknowledgeEvent = function(ackErr) {
+        const acknowledgeEvent = function (ackErr) {
             debug('- acknowledgeEvent()');
-            if (ackErr) 
+            if (ackErr)
                 return done(ackErr);
             utils.apiDelete(app, 'webhooks/events/mailer/' + event.id, done);
         };
@@ -99,9 +99,9 @@ function processWebhooks(app, webhooks, callback) {
             mailer.isEventInteresting(event)) {
             mailer.handleEvent(app, event, acknowledgeEvent);
         } else {
-            acknowledgeEvent(null);  
+            acknowledgeEvent(null);
         }
-    }, function(err) {
+    }, function (err) {
         if (err)
             return callback(err);
         return callback(null);
@@ -111,7 +111,7 @@ function processWebhooks(app, webhooks, callback) {
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
     debug('404');
-    var err = new Error('Not Found');
+    const err = new Error('Not Found');
     err.status = 404;
 
     next(err);

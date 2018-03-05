@@ -1,20 +1,20 @@
 'use strict';
 
-var async = require('async');
-var path = require('path');
-var fs = require('fs');
-var debug = require('debug')('portal-mailer:mailer');
-var mustache = require('mustache');
+const async = require('async');
+const path = require('path');
+const fs = require('fs');
+const debug = require('debug')('portal-mailer:mailer');
+const mustache = require('mustache');
 
-var utils = require('./utils');
+const utils = require('./utils');
 
-var mailer = function () { };
+const mailer = function () { };
 
 mailer.smtpTransporter = null;
 
 mailer.init = function (app, done) {
     debug('init()');
-    var myUrl = app.get('my_url');
+    const myUrl = app.get('my_url');
 
     async.parallel({
         registerWebhook: function (callback) {
@@ -85,7 +85,7 @@ function getEmailData(event) {
 mailer.handleEvent = function (app, event, done) {
     debug('handleEvent()');
     debug(event);
-    var userId = event.data.userId;
+    const userId = event.data.userId;
     utils.apiGet(app, 'users/' + userId, function (err, userInfo) {
         if (err && err.status == 404) {
             // User has probably been deleted in the meantime.
@@ -95,16 +95,16 @@ mailer.handleEvent = function (app, event, done) {
         }
         if (err)
             return done(err);
-        var verificationLink =
+        const verificationLink =
             app.mailerGlobals.network.schema + '://' +
             app.mailerGlobals.network.portalHost +
             '/verification/' + event.data.id;
-        var approvalsLink =
+        const approvalsLink =
             app.mailerGlobals.network.schema + '://' +
             app.mailerGlobals.network.portalHost +
             '/admin/approvals';
 
-        var viewData = {
+        const viewData = {
             title: app.mailerGlobals.title,
             user: {
                 id: userInfo.id,
@@ -119,8 +119,8 @@ mailer.handleEvent = function (app, event, done) {
         };
         debug(viewData);
 
-        var emailData = getEmailData(event);
-        var templateName = emailData.template;
+        const emailData = getEmailData(event);
+        const templateName = emailData.template;
 
         utils.apiGet(app, 'templates/email/' + templateName, function (err, templateText) {
             if (err) {
@@ -128,15 +128,15 @@ mailer.handleEvent = function (app, event, done) {
                 return done(err);
             }
             // Do da Mustache {{ }}
-            var text = mustache.render(templateText, viewData);
+            const text = mustache.render(templateText, viewData);
             // Do da emailing thing
-            var from = '"' + app.mailerGlobals.mailer.senderName + '" <' + app.mailerGlobals.mailer.senderEmail + '>';
-            var to = '"' + userInfo.name + '" <' + userInfo.email + '>';
+            const from = '"' + app.mailerGlobals.mailer.senderName + '" <' + app.mailerGlobals.mailer.senderEmail + '>';
+            let to = '"' + userInfo.name + '" <' + userInfo.email + '>';
             if ("admin" == emailData.to)
                 to = '"' + app.mailerGlobals.mailer.adminName + '" <' + app.mailerGlobals.mailer.adminEmail + '>';
-            var subject = app.mailerGlobals.title + ' - ' + emailData.subject;
+            const subject = app.mailerGlobals.title + ' - ' + emailData.subject;
 
-            var email = {
+            const email = {
                 from: from,
                 to: to,
                 subject: subject,

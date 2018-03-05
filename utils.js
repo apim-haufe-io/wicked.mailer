@@ -1,10 +1,10 @@
 'use strict';
 
-var wicked = require('wicked-sdk');
-var fs = require('fs');
-var path = require('path');
+const wicked = require('wicked-sdk');
+const fs = require('fs');
+const path = require('path');
 
-var utils = function () { };
+const utils = function () { };
 
 utils.getUtc = function () {
     return Math.floor((new Date()).getTime() / 1000);
@@ -26,7 +26,7 @@ utils.getText = function (ob) {
 };
 
 utils.getIndexBy = function (anArray, predicate) {
-    for (var i = 0; i < anArray.length; ++i) {
+    for (let i = 0; i < anArray.length; ++i) {
         if (predicate(anArray[i]))
             return i;
     }
