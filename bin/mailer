@@ -8,7 +8,7 @@
 
 const app = require('../app');
 const mailer = require('../mailer');
-const { debug, info, warn, error } = require('portal-env').Logger('portal-mailer:mailer');
+const { debug, info, warn, error } = require('portal-env').Logger('portal-mailer:main');
 const http = require('http');
 const nodeMailer = require('nodemailer');
 const async = require('async');
