@@ -3,7 +3,7 @@
 const async = require('async');
 const path = require('path');
 const fs = require('fs');
-const debug = require('debug')('portal-mailer:mailer');
+const { debug, info, warn, error } = require('portal-env').Logger('portal-mailer:utils');
 const mustache = require('mustache');
 
 const utils = require('./utils');
@@ -95,10 +95,10 @@ mailer.handleEvent = function (app, event, done) {
         }
         if (err)
             return done(err);
-        const verificationLink =
-            app.mailerGlobals.network.schema + '://' +
-            app.mailerGlobals.network.portalHost +
-            '/verification/' + event.data.id;
+        // Change for wicked 1.0: The verifications already contain the fully qualified link
+        const verificationLink = event.data.link ? 
+            mustache.render(event.data.link, { id: event.data.id }) :
+            '';
         const approvalsLink =
             app.mailerGlobals.network.schema + '://' +
             app.mailerGlobals.network.portalHost +

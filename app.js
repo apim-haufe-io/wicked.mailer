@@ -5,7 +5,7 @@ const path = require('path');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 const async = require('async');
-const debug = require('debug')('portal-mailer:app');
+const { debug, info, warn, error } = require('portal-env').Logger('portal-mailer:utils');
 const correlationIdHandler = require('wicked-sdk').correlationIdHandler();
 
 const mailer = require('./mailer');
