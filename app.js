@@ -6,7 +6,8 @@ const logger = require('morgan');
 const bodyParser = require('body-parser');
 const async = require('async');
 const { debug, info, warn, error } = require('portal-env').Logger('portal-mailer:utils');
-const correlationIdHandler = require('wicked-sdk').correlationIdHandler();
+const wicked = require('wicked-sdk');
+const correlationIdHandler = wicked.correlationIdHandler();
 
 const mailer = require('./mailer');
 const utils = require('./utils');
@@ -46,8 +47,7 @@ app.post('/', function (req, res, next) {
     processWebhooks(app, req.body, function (err) {
         req.app.processingWebhooks = false;
         if (err) {
-            console.error(err);
-            console.error(err.stack);
+            error(err);
             app.lastErr = err;
             return res.status(500).json(err);
         }
@@ -93,7 +93,7 @@ function processWebhooks(app, webhooks, callback) {
             debug('- acknowledgeEvent()');
             if (ackErr)
                 return done(ackErr);
-            utils.apiDelete(app, 'webhooks/events/mailer/' + event.id, done);
+            wicked.deleteWebhookEvent('mailer', event.id, done);
         };
         if (app.mailerGlobals.mailer.useMailer &&
             mailer.isEventInteresting(event)) {

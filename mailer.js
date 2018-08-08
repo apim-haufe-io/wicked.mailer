@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { debug, info, warn, error } = require('portal-env').Logger('portal-mailer:utils');
 const mustache = require('mustache');
+const wicked = require('wicked-sdk');
 
 const utils = require('./utils');
 
@@ -18,18 +19,14 @@ mailer.init = function (app, done) {
 
     async.parallel({
         registerWebhook: function (callback) {
-            const putPayload = {
+            wicked.upsertWebhookListener('mailer', {
                 id: 'mailer',
                 url: myUrl
-            };
-            utils.apiPut(app, 'webhooks/listeners/mailer', putPayload, callback);
+            }, callback);
         },
         getGlobals: function (callback) {
-            utils.apiGet(app, 'globals', function (err, mailerGlobals) {
-                if (err)
-                    return callback(err);
-                return callback(null, mailerGlobals);
-            });
+            const mailerGlobals = wicked.getGlobals();
+            return callback(null, mailerGlobals);
         }
     }, function (err, results) {
         if (err)
@@ -43,7 +40,7 @@ mailer.init = function (app, done) {
 
 mailer.deinit = function (app, done) {
     debug('deinit()');
-    utils.apiDelete(app, 'webhooks/listeners/mailer', done);
+    wicked.deleteWebhookListener('mailer', done);
 };
 
 mailer.isEventInteresting = function (event) {
@@ -86,70 +83,86 @@ mailer.handleEvent = function (app, event, done) {
     debug('handleEvent()');
     debug(event);
     const userId = event.data.userId;
-    utils.apiGet(app, 'users/' + userId, function (err, userInfo) {
-        if (err && err.status == 404) {
+    wicked.getUser(userId, function (err, userInfo) {
+        if (err && err.status === 404) {
             // User has probably been deleted in the meantime.
-            console.error('handleEvent() - Unknown user ID: ' + userId);
+            warn('handleEvent() - Unknown user ID: ' + userId);
             // We'll treat this as a success, not much we can do here.
             return done(null);
         }
         if (err)
             return done(err);
-        // Change for wicked 1.0: The verifications already contain the fully qualified link
-        const verificationLink = event.data.link ? 
-            mustache.render(event.data.link, { id: event.data.id }) :
-            '';
-        const approvalsLink =
-            app.mailerGlobals.network.schema + '://' +
-            app.mailerGlobals.network.portalHost +
-            '/admin/approvals';
 
-        const viewData = {
-            title: app.mailerGlobals.title,
-            user: {
-                id: userInfo.id,
-                firstName: userInfo.firstName,
-                lastName: userInfo.lastName,
-                name: userInfo.name,
-                email: userInfo.email,
-            },
-            verificationLink: verificationLink,
-            approvalsLink: approvalsLink,
-            portalEmail: app.mailerGlobals.mailer.senderEmail
-        };
-        debug(viewData);
-
-        const emailData = getEmailData(event);
-        const templateName = emailData.template;
-
-        utils.apiGet(app, 'templates/email/' + templateName, function (err, templateText) {
-            if (err) {
-                console.error('Getting the email template failed!');
-                return done(err);
-            }
-            // Do da Mustache {{ }}
-            const text = mustache.render(templateText, viewData);
-            // Do da emailing thing
-            const from = '"' + app.mailerGlobals.mailer.senderName + '" <' + app.mailerGlobals.mailer.senderEmail + '>';
-            let to = '"' + userInfo.name + '" <' + userInfo.email + '>';
-            if ("admin" == emailData.to)
-                to = '"' + app.mailerGlobals.mailer.adminName + '" <' + app.mailerGlobals.mailer.adminEmail + '>';
-            const subject = app.mailerGlobals.title + ' - ' + emailData.subject;
-
-            const email = {
-                from: from,
-                to: to,
-                subject: subject,
-                text: text
+        // Let's check whether we have a registration for this user
+        wicked.getUserRegistrations('wicked', userId, function (err, registrations) {
+            // We won't fail if we don't get a registration for this user, instead just use the email
+            // address as "name". If we get specific registration info, that's good, otherwise just use email.
+            let reg = {
+                name: userInfo.email
             };
-            debug(email);
+            if (err) {
+                warn(`Could not retrieve registrations for user ${userId}.`);
+            } else {
+                if (registrations.items.length !== 1) {
+                    warn(`User ${userId} did not have exactly one registration for pool "wicked" (number: ${registrations.items.length}).`);
+                } else {
+                    reg = registrations.items[0];
+                }
+            }
 
-            mailer.smtpTransporter.sendMail(email, function (emailErr, emailResponse) {
-                if (emailErr)
-                    return done(emailErr);
-                debug('Sent email to ' + to + '.');
-                console.log("Sent email to " + to + ".");
-                done(null, emailResponse);
+            // Change for wicked 1.0: The verifications already contain the fully qualified link
+            const verificationLink = event.data.link ?
+                mustache.render(event.data.link, { id: event.data.id }) :
+                '';
+            const approvalsLink =
+                app.mailerGlobals.network.schema + '://' +
+                app.mailerGlobals.network.portalHost +
+                '/admin/approvals';
+
+            const viewData = {
+                title: app.mailerGlobals.title,
+                user: {
+                    id: userInfo.id,
+                    name: reg.name,
+                    email: userInfo.email,
+                },
+                verificationLink: verificationLink,
+                approvalsLink: approvalsLink,
+                portalEmail: app.mailerGlobals.mailer.senderEmail
+            };
+            debug(viewData);
+
+            const emailData = getEmailData(event);
+            const templateName = emailData.template;
+
+            wicked.getEmailTemplate(templateName, function (err, templateText) {
+                if (err) {
+                    error('Getting the email template failed!');
+                    return done(err);
+                }
+                // Do da Mustache {{ }}
+                const text = mustache.render(templateText, viewData);
+                // Do da emailing thing
+                const from = '"' + app.mailerGlobals.mailer.senderName + '" <' + app.mailerGlobals.mailer.senderEmail + '>';
+                let to = '"' + reg.name + '" <' + userInfo.email + '>';
+                if ("admin" == emailData.to)
+                    to = '"' + app.mailerGlobals.mailer.adminName + '" <' + app.mailerGlobals.mailer.adminEmail + '>';
+                const subject = app.mailerGlobals.title + ' - ' + emailData.subject;
+
+                const email = {
+                    from: from,
+                    to: to,
+                    subject: subject,
+                    text: text
+                };
+                debug(email);
+
+                mailer.smtpTransporter.sendMail(email, function (emailErr, emailResponse) {
+                    if (emailErr)
+                        return done(emailErr);
+                    info("Sent email to " + to + ".");
+                    done(null, emailResponse);
+                });
             });
         });
     });
