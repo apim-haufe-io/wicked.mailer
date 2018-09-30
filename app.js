@@ -91,8 +91,10 @@ function processWebhooks(app, webhooks, callback) {
         // Brainfucking callback and closure orgy
         const acknowledgeEvent = function (ackErr) {
             debug('- acknowledgeEvent()');
-            if (ackErr)
-                return done(ackErr);
+            if (ackErr) {
+                error(`An error occurred while mailing. Leaving event unacknowledged.`);
+                return done(null);
+            }
             wicked.deleteWebhookEvent('mailer', event.id, done);
         };
         if (app.mailerGlobals.mailer.useMailer &&

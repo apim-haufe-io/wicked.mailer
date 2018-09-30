@@ -158,8 +158,17 @@ mailer.handleEvent = function (app, event, done) {
                 debug(email);
 
                 mailer.smtpTransporter.sendMail(email, function (emailErr, emailResponse) {
-                    if (emailErr)
+                    if (emailErr) {
+                        // Check the type of error...
+                        // https://www.greenend.org.uk/rjk/tech/smtpreplies.html
+                        switch (emailErr.responseCode) {
+                            case 500:
+                            case 501: // e.g. email address invalid
+                                error(`Could not send email, discarding email to ${to}.`);
+                                return done(null, emailResponse);
+                        }
                         return done(emailErr);
+                    }
                     info("Sent email to " + to + ".");
                     done(null, emailResponse);
                 });
