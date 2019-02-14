@@ -8,7 +8,7 @@
     "morgan": "1.9.0",
     "mustache": "2.2.1",
     "nodemailer": "4.6.8",
-    "portal-env": "file:../portal-env-1.0.0.tgz",
+    "portal-env": "file:../portal-env.tgz",
     "wicked-sdk": "file:wicked-sdk.tgz"
   },
   "scripts": {
