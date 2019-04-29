@@ -126,6 +126,15 @@ mailer.handleEvent = function (app, event, done) {
                     name: reg.name,
                     email: userInfo.email,
                 },
+                api: {
+                    id: event.data.apiId
+                },
+                plan: {
+                    id: event.data.planId
+                },
+                application: {
+                    id: event.data.applicationId
+                },                
                 verificationLink: verificationLink,
                 approvalsLink: approvalsLink,
                 portalEmail: app.mailerGlobals.mailer.senderEmail
@@ -147,8 +156,13 @@ mailer.handleEvent = function (app, event, done) {
                 let to = '"' + reg.name + '" <' + userInfo.email + '>';
                 if ("admin" == emailData.to)
                     to = '"' + app.mailerGlobals.mailer.adminName + '" <' + app.mailerGlobals.mailer.adminEmail + '>';
-                const subject = app.mailerGlobals.title + ' - ' + emailData.subject;
+                    
+                let subject = app.mailerGlobals.title + ' - ' + emailData.subject ;
 
+                if(event.data.group){
+                    subject = subject + ' - ' + event.data.group;
+                }
+                
                 const email = {
                     from: from,
                     to: to,
