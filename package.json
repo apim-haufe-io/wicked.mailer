@@ -9,14 +9,18 @@
     "mustache": "2.2.1",
     "nodemailer": "4.6.8",
     "portal-env": "file:../portal-env.tgz",
-    "wicked-sdk": "file:wicked-sdk.tgz"
+    "wicked-sdk": "file:wicked-sdk.tgz",
+    "snyk": "^1.316.1"
   },
   "scripts": {
-    "start": "node ./bin/mailer"
+    "start": "node ./bin/mailer",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "jshintConfig": {
     "node": true,
     "esversion": 6
   },
-  "name": "portal-mailer"
+  "name": "portal-mailer",
+  "snyk": true
 }
