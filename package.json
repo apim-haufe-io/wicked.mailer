@@ -7,7 +7,7 @@
     "express": "4.16.3",
     "morgan": "1.9.1",
     "mustache": "2.2.1",
-    "nodemailer": "4.6.8",
+    "nodemailer": "6.9.8",
     "portal-env": "file:../portal-env.tgz",
     "wicked-sdk": "file:wicked-sdk.tgz"
   },
